@@ -25,6 +25,7 @@
 struct address_space;
 struct mem_cgroup;
 struct hmm;
+struct kvm;
 
 /*
  * Each physical page in the system has a struct page associated with
@@ -505,9 +506,18 @@ struct mm_struct {
 	/* HMM needs to track a few things per mm */
 	struct hmm *hmm;
 #endif
+#if IS_ENABLED(CONFIG_KVM)
+	struct kvm *kvm;
+#endif
 } __randomize_layout;
 
 extern struct mm_struct init_mm;
+
+#if IS_ENABLED(CONFIG_KVM)
+static inline struct kvm *mm_kvm(struct mm_struct *mm) { return mm->kvm; }
+#else
+static inline struct kvm *mm_kvm(struct mm_struct *mm) { return NULL; }
+#endif
 
 static inline void mm_init_cpumask(struct mm_struct *mm)
 {
