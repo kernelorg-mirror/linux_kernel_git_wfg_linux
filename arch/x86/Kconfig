@@ -453,6 +453,18 @@ config INTEL_RDT
 
 	  Say N if unsure.
 
+config STANDALONE_PMEM_NODE
+	bool "Create standalone PMEM node"
+	depends on X86
+	help
+	  Select to enable PMEM numa node from boot up. Pros are simple code
+	  to create PMEM node, and push page struct on PMEM node itself.
+	  Cons are not compatiable with original FSDAX,DEVDAX namespace.
+	  This could be an alternative to kmem driver which has the flip-side
+	  of pros and cons.
+
+	  Say N if unsure.
+
 if X86_32
 config X86_EXTENDED_PLATFORM
 	bool "Support for extended (non-PC) x86 platforms"

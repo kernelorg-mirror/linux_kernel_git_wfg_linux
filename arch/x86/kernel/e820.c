@@ -167,6 +167,13 @@ static void __init __e820__range_add(struct e820_table *table, u64 start, u64 si
 
 void __init e820__range_add(u64 start, u64 size, enum e820_type type)
 {
+//#ifdef CONFIG_STANDALONE_PMEM_NODE
+	if (type == E820_TYPE_PMEM)
+		type = E820_TYPE_RAM;
+	/* kexec work-around */
+	if ((type == E820_TYPE_RESERVED) && (size >= 0x2000000000))
+		type = E820_TYPE_RAM;
+//#endif
 	__e820__range_add(e820_table, start, size, type);
 }
 
@@ -402,7 +409,6 @@ static int __init __append_e820_table(struct boot_e820_entry *entries, u32 nr_en
 		/* Ignore the entry on 64-bit overflow: */
 		if (start > end && likely(size))
 			return -1;
-
 		e820__range_add(start, size, type);
 
 		entry++;
