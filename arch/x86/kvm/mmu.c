@@ -931,6 +931,16 @@ static void mmu_free_memory_cache(struct kvm_mmu_memory_cache *mc,
 		kmem_cache_free(cache, mc->objects[--mc->nobjs]);
 }
 
+static unsigned long __get_dram_free_pages(gfp_t gfp_mask)
+{
+       struct page *page;
+
+       page = __alloc_pages(GFP_KERNEL_ACCOUNT, 0, numa_node_id());
+       if (!page)
+	       return 0;
+       return (unsigned long) page_address(page);
+}
+
 static int mmu_topup_memory_cache_page(struct kvm_mmu_memory_cache *cache,
 				       int min)
 {
@@ -939,7 +949,7 @@ static int mmu_topup_memory_cache_page(struct kvm_mmu_memory_cache *cache,
 	if (cache->nobjs >= min)
 		return 0;
 	while (cache->nobjs < ARRAY_SIZE(cache->objects)) {
-		page = (void *)__get_free_page(GFP_KERNEL_ACCOUNT);
+		page = (void *)__get_dram_free_pages(GFP_KERNEL_ACCOUNT);
 		if (!page)
 			return -ENOMEM;
 		cache->objects[cache->nobjs++] = page;
