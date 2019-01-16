@@ -32,6 +32,11 @@ config DEV_DAX_PMEM
 
 	  Say M if unsure
 
+config DEV_DAX_KMEM
+	def_bool y
+	depends on DEV_DAX_PMEM   # Needs DEV_DAX_PMEM infrastructure
+	depends on MEMORY_HOTPLUG # for add_memory() and friends
+
 config DEV_DAX_PMEM_COMPAT
 	tristate "PMEM DAX: support the deprecated /sys/class/dax interface"
 	depends on DEV_DAX_PMEM
