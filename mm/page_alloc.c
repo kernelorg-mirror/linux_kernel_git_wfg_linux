@@ -4948,7 +4948,7 @@ static int node_load[MAX_NUMNODES];
  * on them otherwise.
  * It returns -1 if no node is found.
  */
-static int find_next_best_node(int node, nodemask_t *used_node_mask)
+static int find_next_best_node(int node, nodemask_t *used_node_mask, int need_same_type)
 {
 	int n, val;
 	int min_val = INT_MAX;
@@ -4956,7 +4956,7 @@ static int find_next_best_node(int node, nodemask_t *used_node_mask)
 	const struct cpumask *tmp = cpumask_of_node(0);
 
 	/* Use the local node if we haven't already */
-	if (!node_isset(node, *used_node_mask)) {
+	if (need_same_type && !node_isset(node, *used_node_mask)) {
 		node_set(node, *used_node_mask);
 		return node;
 	}
@@ -4965,6 +4965,12 @@ static int find_next_best_node(int node, nodemask_t *used_node_mask)
 
 		/* Don't want a node to appear more than once */
 		if (node_isset(n, *used_node_mask))
+			continue;
+
+		if (need_same_type && !is_node_same_type(node, n))
+			continue;
+
+		if (!need_same_type && is_node_same_type(node, n))
 			continue;
 
 		/* Use the distance array to find the distance */
@@ -5048,31 +5054,51 @@ static void build_zonelists(pg_data_t *pgdat)
 	int node, load, nr_nodes = 0;
 	nodemask_t used_mask;
 	int local_node, prev_node;
+	int need_same_type;
 
 	/* NUMA-aware ordering of nodes */
 	local_node = pgdat->node_id;
 	load = nr_online_nodes;
 	prev_node = local_node;
-	nodes_clear(used_mask);
 
 	memset(node_order, 0, sizeof(node_order));
-	while ((node = find_next_best_node(local_node, &used_mask)) >= 0) {
-		/*
-		 * We don't want to pressure a particular node.
-		 * So adding penalty to the first node in same
-		 * distance group to make it round-robin.
-		 */
-		if (node_distance(local_node, node) !=
-		    node_distance(local_node, prev_node))
-			node_load[node] = load;
+	for (need_same_type = 1; need_same_type >= 0; need_same_type--) {
+		nodes_clear(used_mask);
+		while ((node = find_next_best_node(local_node, &used_mask,
+				need_same_type)) >= 0) {
+			/*
+			 * We don't want to pressure a particular node.
+			 * So adding penalty to the first node in same
+			 * distance group to make it round-robin.
+			 */
+			if (node_distance(local_node, node) !=
+			    node_distance(local_node, prev_node))
+				node_load[node] = load;
 
-		node_order[nr_nodes++] = node;
-		prev_node = node;
-		load--;
+			node_order[nr_nodes++] = node;
+			prev_node = node;
+			load--;
+		}
 	}
-
 	build_zonelists_in_node_order(pgdat, node_order, nr_nodes);
 	build_thisnode_zonelists(pgdat);
+
+	{
+		/* Dump zone list */
+		struct zoneref *zonerefs;
+
+		printk("========== Dump   fallback zone list for node :%d\n", pgdat->node_id);
+		zonerefs = pgdat->node_zonelists[ZONELIST_FALLBACK]._zonerefs;
+		for (; zonerefs->zone; zonerefs++) {
+			printk("	node: %d zone:%s\n", zonelist_node_idx(zonerefs), zonelist_zone(zonerefs)->name);
+		}
+
+		printk("========== Dump nofallback zone list for node :%d\n", pgdat->node_id);
+		zonerefs = pgdat->node_zonelists[ZONELIST_NOFALLBACK]._zonerefs;
+		for (; zonerefs->zone; zonerefs++) {
+			printk("	node: %d zone:%s\n", zonelist_node_idx(zonerefs), zonelist_zone(zonerefs)->name);
+		}
+	}
 }
 
 #ifdef CONFIG_HAVE_MEMORYLESS_NODES

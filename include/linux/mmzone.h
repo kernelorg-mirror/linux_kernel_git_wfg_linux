@@ -948,6 +948,14 @@ static inline int is_node_dram(int nid)
 	return test_bit(PGDAT_DRAM, &pgdat->flags);
 }
 
+static inline int is_node_same_type(int nida, int nidb)
+{
+	if (node_isset(nida, numa_nodes_pmem))
+		return node_isset(nidb, numa_nodes_pmem);
+	else
+		return node_isset(nidb, numa_nodes_dram);
+}
+
 static inline void set_node_type(int nid)
 {
 	pg_data_t *pgdat = NODE_DATA(nid);
