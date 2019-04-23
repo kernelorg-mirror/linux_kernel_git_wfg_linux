@@ -572,6 +572,7 @@ static inline bool zone_intersects(struct zone *zone,
 
 enum {
 	ZONELIST_FALLBACK,	/* zonelist with fallback */
+	ZONELIST_FALLBACK_SAME_TYPE,	/* zonelist with fallback to the same type node */
 #ifdef CONFIG_NUMA
 	/*
 	 * The NUMA zonelists are doubled because we need zonelists that

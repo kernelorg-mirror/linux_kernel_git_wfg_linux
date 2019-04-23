@@ -45,6 +45,8 @@ struct vm_area_struct;
 #else
 #define ___GFP_NOLOCKDEP	0
 #endif
+#define ___GFP_SAME_NODE_TYPE	0x1000000u
+
 /* If the above are modified, __GFP_BITS_SHIFT may need updating */
 
 /*
@@ -208,6 +210,7 @@ struct vm_area_struct;
 
 /* Disable lockdep for GFP context tracking */
 #define __GFP_NOLOCKDEP ((__force gfp_t)___GFP_NOLOCKDEP)
+#define __GFP_SAME_NODE_TYPE ((__force gfp_t)___GFP_SAME_NODE_TYPE)
 
 /* Room for N __GFP_FOO bits */
 #define __GFP_BITS_SHIFT (25 + IS_ENABLED(CONFIG_LOCKDEP))
@@ -288,6 +291,8 @@ struct vm_area_struct;
 #define GFP_TRANSHUGE_LIGHT	((GFP_HIGHUSER_MOVABLE | __GFP_COMP | \
 			 __GFP_NOMEMALLOC | __GFP_NOWARN) & ~__GFP_RECLAIM)
 #define GFP_TRANSHUGE	(GFP_TRANSHUGE_LIGHT | __GFP_DIRECT_RECLAIM)
+
+#define GFP_SAME_NODE_TYPE (__GFP_SAME_NODE_TYPE)
 
 /* Convert GFP flags to their corresponding migrate type */
 #define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE|__GFP_MOVABLE)
@@ -426,6 +431,8 @@ static inline int gfp_zonelist(gfp_t flags)
 #ifdef CONFIG_NUMA
 	if (unlikely(flags & __GFP_THISNODE))
 		return ZONELIST_NOFALLBACK;
+	if (unlikely(flags & __GFP_SAME_NODE_TYPE))
+		return ZONELIST_FALLBACK_SAME_TYPE;
 #endif
 	return ZONELIST_FALLBACK;
 }

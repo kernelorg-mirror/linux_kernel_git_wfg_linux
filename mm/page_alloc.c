@@ -5024,6 +5024,21 @@ static void build_zonelists_in_node_order(pg_data_t *pgdat, int *node_order,
 	}
 	zonerefs->zone = NULL;
 	zonerefs->zone_idx = 0;
+
+	zonerefs = pgdat->node_zonelists[ZONELIST_FALLBACK_SAME_TYPE]._zonerefs;
+
+	for (i = 0; i < nr_nodes; i++) {
+		int nr_zones;
+
+		pg_data_t *node = NODE_DATA(node_order[i]);
+
+		if (!is_node_same_type(node->node_id, pgdat->node_id))
+			continue;
+		nr_zones = build_zonerefs_node(node, zonerefs);
+		zonerefs += nr_zones;
+	}
+	zonerefs->zone = NULL;
+	zonerefs->zone_idx = 0;
 }
 
 /*
@@ -5089,6 +5104,12 @@ static void build_zonelists(pg_data_t *pgdat)
 
 		printk("========== Dump   fallback zone list for node :%d\n", pgdat->node_id);
 		zonerefs = pgdat->node_zonelists[ZONELIST_FALLBACK]._zonerefs;
+		for (; zonerefs->zone; zonerefs++) {
+			printk("	node: %d zone:%s\n", zonelist_node_idx(zonerefs), zonelist_zone(zonerefs)->name);
+		}
+
+		printk("========== Dump   fallback zone list for node with same type :%d\n", pgdat->node_id);
+		zonerefs = pgdat->node_zonelists[ZONELIST_FALLBACK_SAME_TYPE]._zonerefs;
 		for (; zonerefs->zone; zonerefs++) {
 			printk("	node: %d zone:%s\n", zonelist_node_idx(zonerefs), zonelist_zone(zonerefs)->name);
 		}
