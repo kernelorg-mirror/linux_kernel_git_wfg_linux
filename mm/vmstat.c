@@ -1163,6 +1163,7 @@ const char * const vmstat_text[] = {
 	"nr_vmscan_immediate_reclaim",
 	"nr_dirtied",
 	"nr_written",
+	"nr_accessed",
 	"nr_kernel_misc_reclaimable",
 
 	/* enum writeback_stat_item counters */
