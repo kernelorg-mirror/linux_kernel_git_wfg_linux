@@ -487,7 +487,7 @@ bool page_mapped(struct page *page)
 	int i;
 
 	if (likely(!PageCompound(page)))
-		return atomic_read(&page->_mapcount) >= 0;
+		return PageMapped(page) ? (atomic_read(&page->_mapcount) >= 0): false;
 	page = compound_head(page);
 	if (atomic_read(compound_mapcount_ptr(page)) >= 0)
 		return true;

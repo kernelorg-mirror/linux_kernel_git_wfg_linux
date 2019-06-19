@@ -249,6 +249,8 @@ static void page_cache_free_page(struct address_space *mapping,
 		page_ref_sub(page, HPAGE_PMD_NR);
 		VM_BUG_ON_PAGE(page_count(page) <= 0, page);
 	} else {
+		if (!PageMapped(page))
+			page_mapcount_reset(page);
 		put_page(page);
 	}
 }
@@ -1632,7 +1634,24 @@ repeat:
 
 	if (fgp_flags & FGP_ACCESSED)
 		mark_page_accessed(page);
-
+	/*
+	 * w/o PageMapped set, mapcount indicates reference counter.
+	 * From now on, we have software page access counter for
+	 * unmapped pagecache page. We can expand more ways by
+	 * leveraging this counter:
+	 * a. Scan file LRU list
+	 * b. Export interface to user space
+	 *
+	 * The access pattern of mapped pagecache page will be
+	 * handled w/ method of anon pages.
+	 *
+	 * TODO:
+	 * - Need more thinking to account for read and write sperately.
+	 * - Opt-in a knob to multiplex the mapcount, i.e. profile
+	 *   read or profile write.
+	 */
+	if(!PageMapped(page))
+		atomic_inc(&page->_mapcount);
 no_page:
 	if (!page && (fgp_flags & FGP_CREAT)) {
 		int err;

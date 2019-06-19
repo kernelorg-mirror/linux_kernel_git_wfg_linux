@@ -991,7 +991,8 @@ done_merging:
 static inline bool page_expected_state(struct page *page,
 					unsigned long check_flags)
 {
-	if (unlikely(atomic_read(&page->_mapcount) != -1))
+	if (unlikely(PageMapped(page) &&
+			atomic_read(&page->_mapcount) != -1))
 		return false;
 
 	if (unlikely((unsigned long)page->mapping |

@@ -1202,6 +1202,17 @@ void page_add_file_rmap(struct page *page, bool compound)
 			if (PageMlocked(page))
 				clear_page_mlock(compound_head(page));
 		}
+
+		/*
+		 * Reset mapcount in case it carries invalid mapcount
+		 * which used by page cache refernece accounting.
+		 */
+		if (!PageMapped(page)) {
+			/* Mark page cache page as mapped in page table. */
+			SetPageMapped(page);
+			page_mapcount_reset(page);
+		}
+
 		if (!atomic_inc_and_test(&page->_mapcount))
 			goto out;
 	}

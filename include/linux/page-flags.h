@@ -131,6 +131,7 @@ enum pageflags {
 	PG_young,
 	PG_idle,
 #endif
+	PG_mapped, /* Indicate page cache page is mapped in page table */
 	__NR_PAGEFLAGS,
 
 	/* Filesystems */
@@ -323,6 +324,10 @@ PAGEFLAG(Workingset, workingset, PF_HEAD)
 __PAGEFLAG(Slab, slab, PF_NO_TAIL)
 __PAGEFLAG(SlobFree, slob_free, PF_NO_TAIL)
 PAGEFLAG(Checked, checked, PF_NO_COMPOUND)	   /* Used by some filesystems */
+
+
+PAGEFLAG(Mapped, mapped, PF_HEAD) __CLEARPAGEFLAG(Mapped, mapped, PF_HEAD)
+	TESTCLEARFLAG(Mapped, mapped, PF_HEAD)
 
 /* Xen */
 PAGEFLAG(Pinned, pinned, PF_NO_COMPOUND)
